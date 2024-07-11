@@ -55,11 +55,15 @@ const StyledUserAvatar = styled(Avatar)`
   }
 `
 
-const Sidebar = () => {
+interface SidebarProps {
+  email?: string
+}
+
+const Sidebar = ({ email }: SidebarProps) => {
   return (
     <StyledContainer>
       <StyledHeader>
-        <Tooltip title="USER EMAIL" placement="right">
+        <Tooltip title={email} placement="right">
           <StyledUserAvatar />
         </Tooltip>
         <div>
