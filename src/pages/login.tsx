@@ -1,3 +1,4 @@
+'use client'
 import React, { FormEvent, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -7,7 +8,7 @@ import Image from 'next/image'
 import { Button } from '@mui/material'
 import styled from 'styled-components'
 import Whatsapplogo from '../assets/whatsapplogo.png'
-import { app } from '../../firebase'
+import { app, auth } from '../lib/firebase'
 
 const StyledMain = styled.main`
   display: flex;
@@ -144,20 +145,7 @@ const Login = () => {
     setError('')
 
     try {
-      const credential = await signInWithEmailAndPassword(
-        getAuth(app),
-        email,
-        password,
-      )
-      const idToken = await credential.user.getIdToken()
-      console.log('idToken', idToken)
-
-      await fetch('/api/login', {
-        headers: {
-          Authorization: `Bearer ${idToken}`,
-        },
-      })
-
+      await signInWithEmailAndPassword(auth, email, password)
       router.push('/')
     } catch (e) {
       setError((e as Error).message)
@@ -176,6 +164,7 @@ const Login = () => {
             width={80}
             height={80}
             alt="whatsapp logo"
+            priority={true}
           />
         </StyledImageWrapper>
         <StyledTitle>Login to your account</StyledTitle>

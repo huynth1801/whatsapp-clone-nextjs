@@ -1,24 +1,27 @@
+'use client'
 import Image from 'next/image'
-import { getTokens } from 'next-firebase-auth-edge'
-import { cookies } from 'next/headers'
-import { notFound } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import { clientConfig, serverConfig } from '@/config/config'
 
-export default async function Home() {
-  const tokens = await getTokens(cookies(), {
-    apiKey: clientConfig.apiKey,
-    cookieName: serverConfig.cookieName,
-    cookieSignatureKeys: serverConfig.cookieSignatureKeys,
-    serviceAccount: serverConfig.serviceAccount,
-  })
+export default function Home() {
+  const { user } = useAuth()
+  const router = useRouter()
 
-  if (!tokens) {
-    notFound()
-  }
+  useEffect(() => {
+    if (!user) {
+      router.push('/login')
+    }
+  }, [user, router])
+
+  if (!user) return null
+
   return (
     <main>
-      <Sidebar email={tokens?.decodedToken.email} />
+      <Sidebar email={user?.email!} />
+      {/* <h1>Welcome to your dashboard, {user.email}!</h1>; */}
     </main>
   )
 }
