@@ -1,14 +1,18 @@
 'use client'
 import Avatar from '@mui/material/Avatar'
+import { signOut } from 'firebase/auth'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
+import { auth } from '@/lib/firebase'
 import ChatIcon from '@mui/icons-material/Chat'
 import MoreVerticalIcon from '@mui/icons-material/MoreVert'
 import LogoutIcon from '@mui/icons-material/Logout'
 import SearchIcon from '@mui/icons-material/Search'
 import Button from '@mui/material/Button'
-import React from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
+import { useRouter } from 'next/navigation'
+import Loading from '../Loading/Loading'
 
 const StyledContainer = styled.div`
   height: 100vh;
@@ -60,30 +64,47 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ email }: SidebarProps) => {
+  const router = useRouter()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error('Lỗi khi đăng xuất:', error)
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
   return (
-    <StyledContainer>
-      <StyledHeader>
-        <Tooltip title={email} placement="right">
-          <StyledUserAvatar />
-        </Tooltip>
-        <div>
-          <IconButton>
-            <ChatIcon />
-          </IconButton>
-          <IconButton>
-            <MoreVerticalIcon />
-          </IconButton>
-          <IconButton>
-            <LogoutIcon />
-          </IconButton>
-        </div>
-      </StyledHeader>
-      <StyledSearch>
-        <SearchIcon />
-        <StyledSearchInput placeholder="Search in conversations" />
-      </StyledSearch>
-      <StyledSidebarButton>Start a new conversation</StyledSidebarButton>
-    </StyledContainer>
+    <>
+      {isLoggingOut && <Loading />}
+      <StyledContainer>
+        <StyledHeader>
+          <Tooltip title={email} placement="right">
+            <StyledUserAvatar />
+          </Tooltip>
+          <div>
+            <IconButton>
+              <ChatIcon />
+            </IconButton>
+            <IconButton>
+              <MoreVerticalIcon />
+            </IconButton>
+            <IconButton onClick={handleLogout}>
+              <LogoutIcon />
+            </IconButton>
+          </div>
+        </StyledHeader>
+        <StyledSearch>
+          <SearchIcon />
+          <StyledSearchInput placeholder="Search in conversations" />
+        </StyledSearch>
+        <StyledSidebarButton>Start a new conversation</StyledSidebarButton>
+      </StyledContainer>
+    </>
   )
 }
 

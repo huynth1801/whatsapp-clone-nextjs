@@ -20,7 +20,7 @@ export default function Home() {
 
   return (
     <main>
-      <Sidebar email={user?.email!} />
+      <Sidebar email={user.email!} />
       {/* <h1>Welcome to your dashboard, {user.email}!</h1>; */}
     </main>
   )

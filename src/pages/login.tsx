@@ -3,7 +3,12 @@ import React, { FormEvent, useState } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from 'firebase/auth'
 import Image from 'next/image'
 import { Button } from '@mui/material'
 import styled from 'styled-components'
@@ -152,6 +157,17 @@ const Login = () => {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    setError('')
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      router.push('/')
+    } catch (error) {
+      setError((error as Error).message)
+    }
+  }
+
   return (
     <StyledMain>
       <Head>
@@ -195,12 +211,7 @@ const Login = () => {
             />
           </FormGroup>
           <StyledButton type="submit">Enter</StyledButton>
-          <GoogleButton
-            variant="outlined"
-            onClick={() => {
-              console.log('Signing in with Google')
-            }}
-          >
+          <GoogleButton variant="outlined" onClick={handleGoogleSignIn}>
             Sign in with Google
           </GoogleButton>
           <StyledText>
