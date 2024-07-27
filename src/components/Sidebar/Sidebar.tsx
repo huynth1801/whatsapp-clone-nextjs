@@ -13,6 +13,15 @@ import React, { useState } from 'react'
 import styled from 'styled-components'
 import { useRouter } from 'next/navigation'
 import Loading from '../Loading/Loading'
+import {
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+} from '@mui/material'
+import { useAuth } from '@/contexts/AuthContext'
 
 const StyledContainer = styled.div`
   height: 100vh;
@@ -66,6 +75,19 @@ interface SidebarProps {
 const Sidebar = ({ email }: SidebarProps) => {
   const router = useRouter()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const { user, loading } = useAuth()
+  const [isOpenNewConversationDialog, setIsOpenNewConversationDialog] =
+    useState(false)
+  const [recipientEmail, setRecipientEmail] = useState('')
+
+  const toggleNewConversationDialog = (isOpen: boolean) => {
+    setIsOpenNewConversationDialog(isOpen)
+    if (!isOpen) setRecipientEmail('')
+  }
+
+  const closeNewConversationDialog = () => {
+    toggleNewConversationDialog(false)
+  }
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
@@ -78,33 +100,80 @@ const Sidebar = ({ email }: SidebarProps) => {
       setIsLoggingOut(false)
     }
   }
+
+  const createConversation = () => {
+    console.log('Create new conversation')
+  }
+
+  if (isLoggingOut) {
+    return <Loading />
+  }
+
   return (
-    <>
-      {isLoggingOut && <Loading />}
-      <StyledContainer>
-        <StyledHeader>
-          <Tooltip title={email} placement="right">
-            <StyledUserAvatar />
-          </Tooltip>
-          <div>
-            <IconButton>
-              <ChatIcon />
-            </IconButton>
-            <IconButton>
-              <MoreVerticalIcon />
-            </IconButton>
-            <IconButton onClick={handleLogout}>
-              <LogoutIcon />
-            </IconButton>
-          </div>
-        </StyledHeader>
-        <StyledSearch>
-          <SearchIcon />
-          <StyledSearchInput placeholder="Search in conversations" />
-        </StyledSearch>
-        <StyledSidebarButton>Start a new conversation</StyledSidebarButton>
-      </StyledContainer>
-    </>
+    <StyledContainer>
+      <StyledHeader>
+        <Tooltip title={email} placement="right">
+          <StyledUserAvatar />
+        </Tooltip>
+        <div>
+          <IconButton>
+            <ChatIcon />
+          </IconButton>
+          <IconButton>
+            <MoreVerticalIcon />
+          </IconButton>
+          <IconButton onClick={handleLogout}>
+            <LogoutIcon />
+          </IconButton>
+        </div>
+      </StyledHeader>
+      <StyledSearch>
+        <SearchIcon />
+        <StyledSearchInput placeholder="Search in conversations" />
+      </StyledSearch>
+      <StyledSidebarButton
+        onClick={() => {
+          toggleNewConversationDialog(true)
+        }}
+      >
+        Start a new conversation
+      </StyledSidebarButton>
+      {/* List of conversation */}
+      <Dialog
+        open={isOpenNewConversationDialog}
+        onClose={closeNewConversationDialog}
+        aria-labelledby="form-dialog-title"
+      >
+        <DialogTitle id="form-dialog-title">Subscribe</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Please enter a Google email address for the user you wish to chat
+          </DialogContentText>
+          <TextField
+            autoFocus
+            id="name"
+            label="Email Address"
+            type="email"
+            fullWidth
+            variant="standard"
+            value={recipientEmail}
+            onChange={event => setRecipientEmail(event.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeNewConversationDialog} color="primary">
+            Cancel
+          </Button>
+          <Button
+            disabled={!recipientEmail}
+            onClick={createConversation}
+            color="primary"
+          >
+            Subscribe
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </StyledContainer>
   )
 }
 

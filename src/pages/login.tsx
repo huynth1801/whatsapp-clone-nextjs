@@ -14,6 +14,9 @@ import { Button } from '@mui/material'
 import styled from 'styled-components'
 import Whatsapplogo from '../assets/whatsapplogo.png'
 import { app, auth } from '../lib/firebase'
+import { toast, ToastContainer } from 'react-toastify'
+import 'react-toastify/ReactToastify.css'
+import Loading from '@/components/Loading/Loading'
 
 const StyledMain = styled.main`
   display: flex;
@@ -143,36 +146,47 @@ const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setError('')
-
+    setIsLoading(true)
     try {
       await signInWithEmailAndPassword(auth, email, password)
       router.push('/')
     } catch (e) {
-      setError((e as Error).message)
+      const errorMessage = (e as Error).message
+      toast.error(`Login failed: ${errorMessage}`)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const handleGoogleSignIn = async () => {
     setError('')
+    setIsLoading(true)
     try {
       const provider = new GoogleAuthProvider()
       await signInWithPopup(auth, provider)
       router.push('/')
     } catch (error) {
-      setError((error as Error).message)
+      const errorMessage = (error as Error).message
+      toast.error(`Google sign-in failed: ${errorMessage}`)
+    } finally {
+      setIsLoading(false)
     }
   }
+
+  if (isLoading) return <Loading />
 
   return (
     <StyledMain>
       <Head>
         <title>Login</title>
       </Head>
+      <ToastContainer position="top-center" autoClose={3000} />
       <StyledContainer>
         <StyledImageWrapper>
           <Image
