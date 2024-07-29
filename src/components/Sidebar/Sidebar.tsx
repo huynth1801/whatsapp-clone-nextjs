@@ -3,13 +3,14 @@ import Avatar from '@mui/material/Avatar'
 import { signOut } from 'firebase/auth'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
-import { auth } from '@/lib/firebase'
+import { auth, db } from '@/lib/firebase'
 import ChatIcon from '@mui/icons-material/Chat'
 import MoreVerticalIcon from '@mui/icons-material/MoreVert'
 import LogoutIcon from '@mui/icons-material/Logout'
 import SearchIcon from '@mui/icons-material/Search'
 import Button from '@mui/material/Button'
 import React, { useState } from 'react'
+import * as EmailValidator from 'email-validator'
 import styled from 'styled-components'
 import { useRouter } from 'next/navigation'
 import Loading from '../Loading/Loading'
@@ -22,6 +23,10 @@ import {
   TextField,
 } from '@mui/material'
 import { useAuth } from '@/contexts/AuthContext'
+import { addDoc, collection, query, where } from 'firebase/firestore'
+import { useCollection } from 'react-firebase-hooks/firestore'
+import { Conversation } from '@/type'
+import ConversationSelect from '../ConversationSelect/ConversationSelect'
 
 const StyledContainer = styled.div`
   height: 100vh;
@@ -101,8 +106,39 @@ const Sidebar = ({ email }: SidebarProps) => {
     }
   }
 
-  const createConversation = () => {
-    console.log('Create new conversation')
+  const isInvitingSelf = recipientEmail === user?.email
+
+  // Check if conversation already exists between the logged in user and recipientEmail
+  const queryGetConversationForCurrentUser = query(
+    collection(db, 'conversations'),
+    where('users', 'array-contains', user?.email),
+  )
+  const [conversationSnapshots, __loading, __error] = useCollection(
+    queryGetConversationForCurrentUser,
+  )
+  const isConversationAlreadyExists = (recipientEmail: string) => {
+    return conversationSnapshots?.docs.find(conversation =>
+      (conversation.data() as Conversation).users.includes(recipientEmail),
+    )
+  }
+
+  const createConversation = async () => {
+    if (!recipientEmail) return
+
+    if (
+      EmailValidator.validate(recipientEmail) &&
+      !isInvitingSelf &&
+      !isConversationAlreadyExists
+    ) {
+      // Add conversation user to db "conversation" collection
+      // A conversation is between  the currently logged in user and the user invited
+      await addDoc(collection(db, 'conversations'), {
+        users: [user?.email, recipientEmail],
+        createAt: new Date(),
+      })
+    }
+
+    closeNewConversationDialog()
   }
 
   if (isLoggingOut) {
@@ -113,7 +149,7 @@ const Sidebar = ({ email }: SidebarProps) => {
     <StyledContainer>
       <StyledHeader>
         <Tooltip title={email} placement="right">
-          <StyledUserAvatar />
+          <StyledUserAvatar src={user?.photoURL || ''} />
         </Tooltip>
         <div>
           <IconButton>
@@ -139,6 +175,14 @@ const Sidebar = ({ email }: SidebarProps) => {
         Start a new conversation
       </StyledSidebarButton>
       {/* List of conversation */}
+      {conversationSnapshots?.docs.map(conversation => (
+        <ConversationSelect
+          key={conversation.id}
+          id={conversation.id}
+          conversationUsers={(conversation.data() as Conversation).users}
+        />
+      ))}
+
       <Dialog
         open={isOpenNewConversationDialog}
         onClose={closeNewConversationDialog}
